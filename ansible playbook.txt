@@ -1,0 +1,77 @@
+ansible playbook
+------------
+
+inventory.ini
+
+[webservers]
+43.204.211.9 ansible_ssh_user=ec2-user ansible_ssh_private_key_file=/home/admin/ditiss_project/testkey.pem
+
+
+
+
+
+
+
+
+
+
+
+ remediation.yml
+
+
+
+- name: Remediate Vulnerabilities
+  hosts: your_ec2_instance
+  become: yes
+  tasks:
+    - name: Update system packages
+      yum:
+        name: "*"
+        state: latest
+
+    - name: Stop and disable httpd service
+      service:
+        name: httpd
+        state: stopped
+        enabled: no
+
+    - name: Stop and disable vsftpd service
+      service:
+        name: vsftpd
+        state: stopped
+        enabled: no
+
+    - name: Remove httpd and vsftpd packages
+      yum:
+        name:
+          - httpd
+          - vsftpd
+        state: absent
+
+    - name: Remove git package
+      yum:
+        name: git
+        state: absent
+
+    - name: Remove DVWA directory
+      file:
+        path: /var/www/html/DVWA
+        state: absent
+
+    - name: Close firewall ports
+      firewalld:
+        port:
+          - 80/tcp
+          - 21/tcp
+        state: absent
+        permanent: yes
+
+    - name: Reload firewall
+      command: firewall-cmd --reload
+
+    - name: Optional cleanup (uncomment if needed)
+      yum:
+        name: "{{ item }}"
+        state: absent
+      loop:
+        - <any-dependency-to-remove>
